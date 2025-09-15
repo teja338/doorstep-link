@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ServiceRequest, ServiceType, RequestStatus } from '@/types';
+import { ServiceRequest, ServiceType, RequestStatus, VehicleType } from '@/types';
 
 interface ServiceContextType {
   requests: ServiceRequest[];
@@ -9,6 +9,8 @@ interface ServiceContextType {
   getPendingRequests: () => ServiceRequest[];
   getDriverRequests: (driverId: string) => ServiceRequest[];
   cancelRequest: (requestId: string) => void;
+  acceptRequest: (requestId: string, driverId: string) => void;
+  rejectRequest: (requestId: string) => void;
 }
 
 const ServiceContext = createContext<ServiceContextType | null>(null);
@@ -19,6 +21,7 @@ const initialRequests: ServiceRequest[] = [
     id: '1',
     userId: '1',
     serviceType: 'medicine',
+    vehicleType: 'bike',
     pickupLocation: 'City Medical Store, Main Bazaar',
     destination: '123 Main St, Village Name',
     description: 'Urgent diabetes medicine needed',
@@ -31,6 +34,7 @@ const initialRequests: ServiceRequest[] = [
     id: '2',
     userId: '1',
     serviceType: 'groceries',
+    vehicleType: 'auto',
     pickupLocation: 'Super Market, City Center',
     destination: '123 Main St, Village Name',
     description: 'Weekly grocery shopping',
@@ -93,6 +97,16 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateRequestStatus(requestId, 'cancelled');
   };
 
+  const acceptRequest = (requestId: string, driverId: string) => {
+    updateRequestStatus(requestId, 'accepted', driverId);
+  };
+
+  const rejectRequest = (requestId: string) => {
+    // For demo purposes, rejecting just removes it from pending
+    // In real app, this might reassign or mark differently
+    updateRequestStatus(requestId, 'cancelled');
+  };
+
   return (
     <ServiceContext.Provider value={{
       requests,
@@ -101,7 +115,9 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       getUserRequests,
       getPendingRequests,
       getDriverRequests,
-      cancelRequest
+      cancelRequest,
+      acceptRequest,
+      rejectRequest
     }}>
       {children}
     </ServiceContext.Provider>

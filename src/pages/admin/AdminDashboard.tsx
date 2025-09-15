@@ -184,12 +184,15 @@ export const AdminDashboard = () => {
                   recentRequests.map((request) => (
                     <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <p className="font-medium text-sm">{serviceTypeLabels[request.serviceType]}</p>
-                          {request.serviceType === 'ambulance' && (
-                            <AlertTriangle className="h-4 w-4 text-red-500" />
-                          )}
-                        </div>
+                        <div className="flex items-center space-x-3">
+                              <span className="text-lg">{getVehicleIcon(request.vehicleType)}</span>
+                              <div>
+                                <p className="font-medium text-sm capitalize">{request.serviceType}</p>
+                                <p className="text-xs text-muted-foreground capitalize">
+                                  {request.vehicleType.replace('-', ' ')}
+                                </p>
+                              </div>
+                            </div>
                         <p className="text-xs text-muted-foreground">
                           {request.pickupLocation.substring(0, 40)}...
                         </p>

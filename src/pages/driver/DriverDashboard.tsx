@@ -1,66 +1,53 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useService } from '@/contexts/ServiceContext';
-import { 
-  Car, 
-  MapPin, 
-  Phone, 
-  Clock,
-  CheckCircle,
-  XCircle,
-  IndianRupee,
-  AlertTriangle
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Clock, MapPin, Phone, AlertCircle, CheckCircle, Truck, Car, IndianRupee } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
-const serviceTypeLabels = {
-  ambulance: 'Emergency Transport',
-  medicine: 'Medicine Delivery',
-  gas: 'Gas Cylinder',
-  groceries: 'Groceries',
-  food: 'Food Delivery',
-  documents: 'Document Service',
-  others: 'Other Service'
+const getVehicleIcon = (vehicleType: string) => {
+  switch (vehicleType) {
+    case 'bike': return '🏍️';
+    case 'auto': return '🛺';
+    case 'car': return '🚗';
+    case 'ambulance': return '🚑';
+    case 'mini-truck': return '🚚';
+    default: return '🚐';
+  }
+};
+
+const getServiceTypeColor = (serviceType: string) => {
+  switch (serviceType) {
+    case 'ambulance': return 'bg-red-100 text-red-800 border-red-300';
+    case 'medicine': return 'bg-blue-100 text-blue-800 border-blue-300';
+    default: return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
 };
 
 export const DriverDashboard = () => {
   const { auth } = useAuth();
-  const { getPendingRequests, updateRequestStatus } = useService();
-  const [acceptingRequests, setAcceptingRequests] = useState<string[]>([]);
+  const { requests, acceptRequest, rejectRequest } = useService();
 
-  const pendingRequests = getPendingRequests();
+  const pendingRequests = requests.filter(request => request.status === 'pending');
 
-  const handleAcceptRequest = async (requestId: string) => {
-    if (!auth.user) return;
-    
-    setAcceptingRequests(prev => [...prev, requestId]);
-    
-    try {
-      updateRequestStatus(requestId, 'accepted', auth.user.id);
+  const handleAccept = (requestId: string) => {
+    if (auth.user) {
+      acceptRequest(requestId, auth.user.id);
       toast({
         title: "Request accepted!",
-        description: "The customer has been notified. You can now start the service.",
+        description: "The request has been assigned to you. Check 'My Services' for details.",
       });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to accept request. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setAcceptingRequests(prev => prev.filter(id => id !== requestId));
     }
   };
 
-  const handleRejectRequest = (requestId: string) => {
-    // In a real app, this might remove the request from this driver's view
-    // For demo purposes, we'll just show a toast
+  const handleReject = (requestId: string) => {
+    rejectRequest(requestId);
     toast({
       title: "Request declined",
-      description: "The request has been removed from your dashboard.",
+      description: "The request has been declined and will be available for other drivers.",
+      variant: "destructive",
     });
   };
 
@@ -158,23 +145,23 @@ export const DriverDashboard = () => {
                         <div className="flex items-center space-x-3">
                           <div className={`w-3 h-3 ${urgencyColors[urgency]} rounded-full`}></div>
                           <div>
-                            <CardTitle className="text-xl flex items-center space-x-2">
-                              <span>{serviceTypeLabels[request.serviceType]}</span>
-                              {urgency === 'critical' && (
-                                <Badge variant="destructive" className="text-xs">
-                                  <AlertTriangle className="w-3 h-3 mr-1" />
-                                  CRITICAL
-                                </Badge>
-                              )}
-                              {urgency === 'high' && (
-                                <Badge className="text-xs bg-orange-500">
-                                  HIGH PRIORITY
-                                </Badge>
-                              )}
-                            </CardTitle>
-                            <CardDescription className="text-base">
-                              Request ID: {request.id} • Requested {new Date(request.requestedAt).toLocaleTimeString()}
-                            </CardDescription>
+                    <CardTitle className="flex items-center space-x-2 text-xl font-bold">
+                      <span className="text-2xl">{getVehicleIcon(request.vehicleType)}</span>
+                      <span className="capitalize">{request.serviceType}</span>
+                      <Badge className={`rounded-full px-3 py-1 border text-xs ${getServiceTypeColor(request.serviceType)}`}>
+                        {request.serviceType === 'ambulance' || request.serviceType === 'medicine' ? 'URGENT' : 'STANDARD'}
+                      </Badge>
+                    </CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Truck className="h-4 w-4 text-accent-blue" />
+                      <span className="text-sm font-medium text-accent-blue capitalize">
+                        {request.vehicleType.replace('-', ' ')} Required
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span>Requested {format(new Date(request.requestedAt), 'MMM d, h:mm a')}</span>
+                    </div>
                           </div>
                         </div>
                         
@@ -242,28 +229,22 @@ export const DriverDashboard = () => {
 
                       {/* Action Buttons */}
                       <div className="flex gap-3 pt-2">
-                        <Button
-                          variant="emergency"
-                          className="flex-1"
-                          onClick={() => handleAcceptRequest(request.id)}
-                          disabled={isAccepting}
-                        >
-                          {isAccepting ? 'Accepting...' : 'Accept Request'}
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          onClick={() => handleRejectRequest(request.id)}
-                          disabled={isAccepting}
-                        >
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Decline
-                        </Button>
-                        
-                        <Button variant="secondary">
-                          <MapPin className="w-4 h-4 mr-2" />
-                          View on Map
-                        </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleReject(request.id)}
+                      className="text-red-600 border-red-300 hover:bg-red-50 rounded-lg"
+                    >
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => handleAccept(request.id)}
+                      className="rounded-lg font-semibold"
+                    >
+                      Accept Request
+                    </Button>
                       </div>
                     </CardContent>
                   </Card>

@@ -8,8 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useService } from '@/contexts/ServiceContext';
-import { ServiceType } from '@/types';
-import { Calendar, MapPin, Phone, Send } from 'lucide-react';
+import { ServiceType, VehicleType } from '@/types';
+import { Calendar, MapPin, Phone, Send, Truck } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const serviceOptions = [
@@ -22,6 +22,14 @@ const serviceOptions = [
   { value: 'others', label: 'Other Services', urgent: false }
 ];
 
+const vehicleOptions = [
+  { value: 'bike', label: 'Bike/Motorcycle', description: 'Small items, documents, medicines' },
+  { value: 'auto', label: 'Auto Rickshaw', description: 'Moderate items, short distance travel' },
+  { value: 'car', label: 'Car', description: 'People transport, comfortable rides' },
+  { value: 'ambulance', label: 'Ambulance', description: 'Medical emergencies only' },
+  { value: 'mini-truck', label: 'Mini Truck', description: 'Heavy items, furniture, gas cylinders' }
+];
+
 export const BookService = () => {
   const { auth } = useAuth();
   const { addRequest } = useService();
@@ -29,6 +37,7 @@ export const BookService = () => {
   
   const [formData, setFormData] = useState({
     serviceType: '' as ServiceType,
+    vehicleType: '' as VehicleType,
     pickupLocation: '',
     destination: '',
     description: '',
@@ -59,6 +68,7 @@ export const BookService = () => {
       addRequest({
         userId: auth.user.id,
         serviceType: formData.serviceType,
+        vehicleType: formData.vehicleType,
         pickupLocation: formData.pickupLocation,
         destination: formData.destination || undefined,
         description: formData.description,
@@ -96,9 +106,9 @@ export const BookService = () => {
           </p>
         </div>
 
-        <Card className="shadow-lg">
+        <Card className="shadow-md rounded-xl border border-gray-200">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className="flex items-center space-x-2 text-xl font-bold">
               <Send className="h-5 w-5 text-primary" />
               <span>Service Request Form</span>
             </CardTitle>
@@ -116,12 +126,12 @@ export const BookService = () => {
                   value={formData.serviceType} 
                   onValueChange={(value: ServiceType) => handleInputChange('serviceType', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-gray-300">
                     <SelectValue placeholder="Select the service you need" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                     {serviceOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value} className="hover:bg-gray-50">
                         <div className="flex items-center space-x-2">
                           <span>{option.label}</span>
                           {option.urgent && (
@@ -139,6 +149,32 @@ export const BookService = () => {
                     ⚡ This is an urgent service - priority response activated
                   </p>
                 )}
+              </div>
+
+              {/* Vehicle Type */}
+              <div className="space-y-2">
+                <Label htmlFor="vehicleType">Vehicle Type *</Label>
+                <Select 
+                  value={formData.vehicleType} 
+                  onValueChange={(value: VehicleType) => handleInputChange('vehicleType', value)}
+                >
+                  <SelectTrigger className="bg-white border-gray-300">
+                    <SelectValue placeholder="Select vehicle type needed" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    {vehicleOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="hover:bg-gray-50">
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <Truck className="h-4 w-4 text-accent-blue" />
+                            <span className="font-medium">{option.label}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{option.description}</p>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Pickup Location */}
@@ -226,17 +262,18 @@ export const BookService = () => {
 
               {/* Submit Button */}
               <div className="flex gap-4 pt-4">
-                <Button
+                  <Button
                   type="submit"
                   variant="emergency"
-                  className="flex-1"
-                  disabled={isLoading || !formData.serviceType || !formData.pickupLocation || !formData.description}
+                  className="flex-1 rounded-xl font-bold"
+                  disabled={isLoading || !formData.serviceType || !formData.vehicleType || !formData.pickupLocation || !formData.description}
                 >
                   {isLoading ? 'Submitting...' : selectedService?.urgent ? 'Request Emergency Service' : 'Book Service'}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
+                  className="rounded-xl border-accent-blue text-accent-blue hover:bg-accent-blue hover:text-white"
                   onClick={() => navigate('/my-requests')}
                 >
                   View My Requests

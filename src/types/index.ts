@@ -9,6 +9,13 @@ export type ServiceType =
   | 'documents'
   | 'others';
 
+export type VehicleType =
+  | 'bike'
+  | 'auto'
+  | 'car'
+  | 'ambulance'
+  | 'mini-truck';
+
 export type RequestStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
 
 export interface User {
@@ -32,6 +39,7 @@ export interface ServiceRequest {
   userId: string;
   driverId?: string;
   serviceType: ServiceType;
+  vehicleType: VehicleType;
   pickupLocation: string;
   destination?: string;
   description: string;

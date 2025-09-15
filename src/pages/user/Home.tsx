@@ -80,10 +80,10 @@ export const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary/10 via-secondary/10 to-success/10 py-20">
+      <section className="bg-background py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-hero bg-clip-text text-transparent">
+            <span className="text-primary">
               Help at your doorstep
             </span>
             <br />
@@ -95,12 +95,12 @@ export const Home = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/book-service">
-              <Button variant="hero" size="xl">
+              <Button variant="default" size="xl" className="rounded-xl font-bold shadow-lg hover:shadow-xl">
                 Book Emergency Now
               </Button>
             </Link>
             <Link to="/my-requests">
-              <Button variant="outline" size="xl">
+              <Button variant="outline" size="xl" className="rounded-xl border-accent-blue text-accent-blue hover:bg-accent-blue hover:text-white">
                 Track My Orders
               </Button>
             </Link>
@@ -120,12 +120,12 @@ export const Home = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service, index) => (
-              <Card key={index} className="hover:shadow-lg transition-all duration-300 group">
+              <Card key={index} className="hover:shadow-md transition-all duration-300 group rounded-xl border border-gray-200">
                 <CardHeader>
                   <div className={`w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                     <service.icon className={`h-6 w-6 ${service.color}`} />
                   </div>
-                  <CardTitle className="text-xl">{service.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold">{service.title}</CardTitle>
                   <CardDescription className="text-base">
                     {service.description}
                   </CardDescription>
@@ -170,7 +170,7 @@ export const Home = () => {
             Join thousands of satisfied customers who trust us for their emergency needs.
           </p>
           <Link to="/book-service">
-            <Button variant="secondary" size="xl">
+            <Button variant="secondary" size="xl" className="rounded-xl font-bold">
               Book Your First Service
             </Button>
           </Link>

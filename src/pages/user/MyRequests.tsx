@@ -1,57 +1,52 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useService } from '@/contexts/ServiceContext';
-import { RequestStatus } from '@/types';
-import { 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Truck, 
-  Phone, 
-  MapPin,
-  Calendar,
-  IndianRupee
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Clock, MapPin, Phone, Truck, User, Package, Calendar, IndianRupee } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 
-const statusConfig = {
-  pending: { icon: Clock, color: 'bg-yellow-500', label: 'Pending', description: 'Waiting for driver' },
-  accepted: { icon: CheckCircle, color: 'bg-blue-500', label: 'Accepted', description: 'Driver assigned' },
-  in_progress: { icon: Truck, color: 'bg-orange-500', label: 'In Progress', description: 'On the way' },
-  completed: { icon: CheckCircle, color: 'bg-green-500', label: 'Completed', description: 'Service completed' },
-  cancelled: { icon: XCircle, color: 'bg-red-500', label: 'Cancelled', description: 'Request cancelled' }
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'pending': return 'bg-amber-100 text-amber-800 border-amber-300';
+    case 'accepted': return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'in_progress': return 'bg-purple-100 text-purple-800 border-purple-300';
+    case 'completed': return 'bg-green-100 text-green-800 border-green-300';
+    case 'cancelled': return 'bg-red-100 text-red-800 border-red-300';
+    default: return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
 };
 
-const serviceTypeLabels = {
-  ambulance: 'Emergency Transport',
-  medicine: 'Medicine Delivery',
-  gas: 'Gas Cylinder',
-  groceries: 'Groceries',
-  food: 'Food Delivery',
-  documents: 'Document Service',
-  others: 'Other Service'
+const getVehicleIcon = (vehicleType: string) => {
+  switch (vehicleType) {
+    case 'bike': return '🏍️';
+    case 'auto': return '🛺';
+    case 'car': return '🚗';
+    case 'ambulance': return '🚑';
+    case 'mini-truck': return '🚚';
+    default: return '🚐';
+  }
 };
 
 export const MyRequests = () => {
   const { auth } = useAuth();
-  const { getUserRequests, cancelRequest } = useService();
-  const [filter, setFilter] = useState<RequestStatus | 'all'>('all');
+  const { requests, cancelRequest } = useService();
+  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'completed' | 'cancelled'>('all');
 
-  if (!auth.user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Please log in to view your requests.</p>
-      </div>
-    );
-  }
-
-  const userRequests = getUserRequests(auth.user.id);
+  const userRequests = requests.filter(request => request.userId === auth.user?.id);
   const filteredRequests = filter === 'all' 
     ? userRequests 
     : userRequests.filter(req => req.status === filter);
+
+  const handleCancelRequest = (requestId: string) => {
+    cancelRequest(requestId);
+    toast({
+      title: "Request cancelled",
+      description: "Your service request has been cancelled successfully.",
+    });
+  };
 
   const handleCancelRequest = (requestId: string) => {
     cancelRequest(requestId);
@@ -118,17 +113,26 @@ export const MyRequests = () => {
                         <div className={`w-10 h-10 ${statusInfo.color} rounded-full flex items-center justify-center`}>
                           <StatusIcon className="h-5 w-5 text-white" />
                         </div>
-                        <div>
-                          <CardTitle className="text-lg">
-                            {serviceTypeLabels[request.serviceType]}
-                          </CardTitle>
-                          <CardDescription>
-                            Request ID: {request.id} • {statusInfo.description}
-                          </CardDescription>
-                        </div>
+                  <div className="space-y-2">
+                    <CardTitle className="flex items-center space-x-2 text-xl font-bold">
+                      <span className="text-2xl">{getVehicleIcon(request.vehicleType)}</span>
+                      <span className="capitalize">{request.serviceType}</span>
+                      <span className="text-sm font-normal text-muted-foreground">
+                        • {request.vehicleType.replace('-', ' ')}
+                      </span>
+                    </CardTitle>
+                    <div className="flex items-center space-x-4">
+                      <Badge className={`rounded-full px-3 py-1 border ${getStatusColor(request.status)}`}>
+                        {request.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {format(new Date(request.requestedAt), 'MMM d, yyyy • h:mm a')}
+                      </span>
+                    </div>
+                  </div>
                       </div>
                       <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
-                        {statusInfo.label}
+                        {request.status.replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                   </CardHeader>
