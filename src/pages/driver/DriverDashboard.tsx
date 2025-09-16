@@ -133,7 +133,6 @@ export const DriverDashboard = () => {
             <div className="grid gap-6">
               {pendingRequests.map((request) => {
                 const urgency = getUrgencyLevel(request.serviceType, request.description);
-                const isAccepting = acceptingRequests.includes(request.id);
                 
                 return (
                   <Card key={request.id} className={`hover:shadow-lg transition-all duration-300 ${

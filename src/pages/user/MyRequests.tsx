@@ -33,20 +33,12 @@ const getVehicleIcon = (vehicleType: string) => {
 export const MyRequests = () => {
   const { auth } = useAuth();
   const { requests, cancelRequest } = useService();
-  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'completed' | 'cancelled'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled'>('all');
 
   const userRequests = requests.filter(request => request.userId === auth.user?.id);
   const filteredRequests = filter === 'all' 
     ? userRequests 
     : userRequests.filter(req => req.status === filter);
-
-  const handleCancelRequest = (requestId: string) => {
-    cancelRequest(requestId);
-    toast({
-      title: "Request cancelled",
-      description: "Your service request has been cancelled successfully.",
-    });
-  };
 
   const handleCancelRequest = (requestId: string) => {
     cancelRequest(requestId);
@@ -75,7 +67,7 @@ export const MyRequests = () => {
               size="sm"
               onClick={() => setFilter(status)}
             >
-              {status === 'all' ? 'All Requests' : statusConfig[status].label}
+              {status === 'all' ? 'All Requests' : status.replace('_', ' ').toUpperCase()}
             </Button>
           ))}
         </div>
@@ -102,17 +94,11 @@ export const MyRequests = () => {
         ) : (
           <div className="space-y-4">
             {filteredRequests.map((request) => {
-              const statusInfo = statusConfig[request.status];
-              const StatusIcon = statusInfo.icon;
-
               return (
                 <Card key={request.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className={`w-10 h-10 ${statusInfo.color} rounded-full flex items-center justify-center`}>
-                          <StatusIcon className="h-5 w-5 text-white" />
-                        </div>
                   <div className="space-y-2">
                     <CardTitle className="flex items-center space-x-2 text-xl font-bold">
                       <span className="text-2xl">{getVehicleIcon(request.vehicleType)}</span>

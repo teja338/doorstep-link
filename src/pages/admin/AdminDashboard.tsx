@@ -185,7 +185,13 @@ export const AdminDashboard = () => {
                     <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">
-                              <span className="text-lg">{getVehicleIcon(request.vehicleType)}</span>
+                          <span className="text-lg">
+                            {request.vehicleType === 'bike' ? '🏍️' : 
+                             request.vehicleType === 'auto' ? '🛺' : 
+                             request.vehicleType === 'car' ? '🚗' : 
+                             request.vehicleType === 'ambulance' ? '🚑' : 
+                             request.vehicleType === 'mini-truck' ? '🚚' : '🚐'}
+                          </span>
                               <div>
                                 <p className="font-medium text-sm capitalize">{request.serviceType}</p>
                                 <p className="text-xs text-muted-foreground capitalize">
