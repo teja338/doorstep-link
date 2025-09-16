@@ -11,6 +11,13 @@ interface ServiceContextType {
   cancelRequest: (requestId: string) => void;
   acceptRequest: (requestId: string, driverId: string) => void;
   rejectRequest: (requestId: string) => void;
+  // Admin functions
+  deleteRequest: (requestId: string) => void;
+  getAllUsers: () => any[];
+  getAllDrivers: () => any[];
+  approveDriver: (driverId: string) => void;
+  removeDriver: (driverId: string) => void;
+  deleteUser: (userId: string) => void;
 }
 
 const ServiceContext = createContext<ServiceContextType | null>(null);
@@ -47,8 +54,23 @@ const initialRequests: ServiceRequest[] = [
   }
 ];
 
+// Mock users and drivers data
+const mockUsers = [
+  { id: '1', name: 'John Doe', email: 'john@example.com', phone: '+91 9876543210', status: 'active' },
+  { id: '2', name: 'Jane Smith', email: 'jane@example.com', phone: '+91 8765432109', status: 'active' },
+  { id: '3', name: 'Mike Johnson', email: 'mike@example.com', phone: '+91 7654321098', status: 'inactive' }
+];
+
+const mockDrivers = [
+  { id: '2', name: 'Driver Kumar', email: 'kumar@example.com', phone: '+91 9988776655', vehicleType: 'bike', status: 'approved' },
+  { id: '3', name: 'Driver Singh', email: 'singh@example.com', phone: '+91 8877665544', vehicleType: 'auto', status: 'pending' },
+  { id: '4', name: 'Driver Patel', email: 'patel@example.com', phone: '+91 7766554433', vehicleType: 'car', status: 'approved' }
+];
+
 export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<ServiceRequest[]>(initialRequests);
+  const [users, setUsers] = useState(mockUsers);
+  const [drivers, setDrivers] = useState(mockDrivers);
 
   // Load requests from localStorage on mount
   useEffect(() => {
@@ -107,6 +129,30 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateRequestStatus(requestId, 'cancelled');
   };
 
+  // Admin functions
+  const deleteRequest = (requestId: string) => {
+    setRequests(prev => prev.filter(req => req.id !== requestId));
+  };
+
+  const getAllUsers = () => users;
+  const getAllDrivers = () => drivers;
+
+  const approveDriver = (driverId: string) => {
+    setDrivers(prev => prev.map(driver => 
+      driver.id === driverId ? { ...driver, status: 'approved' } : driver
+    ));
+  };
+
+  const removeDriver = (driverId: string) => {
+    setDrivers(prev => prev.filter(driver => driver.id !== driverId));
+  };
+
+  const deleteUser = (userId: string) => {
+    setUsers(prev => prev.filter(user => user.id !== userId));
+    // Also remove user's requests
+    setRequests(prev => prev.filter(req => req.userId !== userId));
+  };
+
   return (
     <ServiceContext.Provider value={{
       requests,
@@ -117,7 +163,13 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       getDriverRequests,
       cancelRequest,
       acceptRequest,
-      rejectRequest
+      rejectRequest,
+      deleteRequest,
+      getAllUsers,
+      getAllDrivers,
+      approveDriver,
+      removeDriver,
+      deleteUser
     }}>
       {children}
     </ServiceContext.Provider>

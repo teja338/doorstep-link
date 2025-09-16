@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,8 +37,20 @@ const serviceTypeLabels = {
 };
 
 export const AdminDashboard = () => {
-  const { requests } = useService();
+  const { 
+    requests, 
+    deleteRequest, 
+    getAllUsers, 
+    getAllDrivers, 
+    approveDriver, 
+    removeDriver, 
+    deleteUser 
+  } = useService();
   
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'drivers' | 'requests' | 'reports'>('overview');
+  
+  const users = getAllUsers();
+  const drivers = getAllDrivers();
   const recentRequests = requests.slice(0, 10);
   const pendingCount = requests.filter(r => r.status === 'pending').length;
   const completedCount = requests.filter(r => r.status === 'completed').length;
@@ -267,26 +280,234 @@ export const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="h-16 flex flex-col items-center justify-center"
+                  onClick={() => setActiveTab('users')}
+                >
                   <Users className="h-6 w-6 mb-2" />
                   <span className="text-sm">Manage Users</span>
                 </Button>
-                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="h-16 flex flex-col items-center justify-center"
+                  onClick={() => setActiveTab('drivers')}
+                >
                   <Car className="h-6 w-6 mb-2" />
                   <span className="text-sm">Manage Drivers</span>
                 </Button>
-                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="h-16 flex flex-col items-center justify-center"
+                  onClick={() => setActiveTab('reports')}
+                >
                   <BarChart3 className="h-6 w-6 mb-2" />
                   <span className="text-sm">View Reports</span>
                 </Button>
-                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="h-16 flex flex-col items-center justify-center"
+                  onClick={() => setActiveTab('requests')}
+                >
                   <AlertTriangle className="h-6 w-6 mb-2" />
-                  <span className="text-sm">System Settings</span>
+                  <span className="text-sm">All Requests</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Tab Content */}
+        {activeTab === 'users' && (
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage all registered users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {users.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{user.name}</h4>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <p className="text-sm text-muted-foreground">{user.phone}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                          {user.status}
+                        </Badge>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => deleteUser(user.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'drivers' && (
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Driver Management</CardTitle>
+                <CardDescription>Manage driver approvals and status</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {drivers.map((driver) => (
+                    <div key={driver.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{driver.name}</h4>
+                        <p className="text-sm text-muted-foreground">{driver.email}</p>
+                        <p className="text-sm text-muted-foreground">{driver.phone}</p>
+                        <p className="text-sm text-muted-foreground capitalize">Vehicle: {driver.vehicleType}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={driver.status === 'approved' ? 'default' : 'secondary'}>
+                          {driver.status}
+                        </Badge>
+                        {driver.status === 'pending' && (
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => approveDriver(driver.id)}
+                          >
+                            Approve
+                          </Button>
+                        )}
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => removeDriver(driver.id)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'requests' && (
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Service Requests</CardTitle>
+                <CardDescription>View and manage all service requests</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {requests.map((request) => (
+                    <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <span className="text-lg">
+                            {request.vehicleType === 'bike' ? '🏍️' : 
+                             request.vehicleType === 'auto' ? '🛺' : 
+                             request.vehicleType === 'car' ? '🚗' : 
+                             request.vehicleType === 'ambulance' ? '🚑' : 
+                             request.vehicleType === 'mini-truck' ? '🚚' : '🚐'}
+                          </span>
+                          <div>
+                            <p className="font-medium capitalize">{request.serviceType}</p>
+                            <p className="text-sm text-muted-foreground capitalize">
+                              {request.vehicleType.replace('-', ' ')} • {request.pickupLocation}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
+                          {request.status.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => deleteRequest(request.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>System Reports</CardTitle>
+                <CardDescription>View detailed analytics and reports</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Request Statistics</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Total Requests:</span>
+                        <span className="font-medium">{requests.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Completed:</span>
+                        <span className="font-medium text-green-600">{completedCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pending:</span>
+                        <span className="font-medium text-amber-600">{pendingCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>In Progress:</span>
+                        <span className="font-medium text-blue-600">{inProgressCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h4 className="font-medium">User Statistics</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Total Users:</span>
+                        <span className="font-medium">{users.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total Drivers:</span>
+                        <span className="font-medium">{drivers.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Approved Drivers:</span>
+                        <span className="font-medium text-green-600">
+                          {drivers.filter(d => d.status === 'approved').length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pending Approvals:</span>
+                        <span className="font-medium text-amber-600">
+                          {drivers.filter(d => d.status === 'pending').length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
