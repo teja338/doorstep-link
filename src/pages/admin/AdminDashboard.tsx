@@ -50,27 +50,28 @@ export const AdminDashboard = () => {
   // Safely get users and drivers with fallback
   const users = getAllUsers() || [];
   const drivers = getAllDrivers() || [];
-  const recentRequests = requests?.slice(0, 10) || [];
-  const pendingCount = requests?.filter(r => r.status === 'pending').length || 0;
-  const completedCount = requests?.filter(r => r.status === 'completed').length || 0;
-  const inProgressCount = requests?.filter(r => r.status === 'in_progress').length || 0;
+  const safeRequests = requests || [];
+  const recentRequests = safeRequests.slice(0, 10);
+  const pendingCount = safeRequests.filter(r => r.status === 'pending').length;
+  const completedCount = safeRequests.filter(r => r.status === 'completed').length;
+  const inProgressCount = safeRequests.filter(r => r.status === 'in_progress').length;
 
-  // Filter functions
+  // Filter functions with safe string handling
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (user.email || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const filteredDrivers = drivers.filter(driver => 
-    driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    driver.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (driver.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (driver.email || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const filteredRequests = requests?.filter(request => 
-    request.serviceType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    request.pickupLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    request.status.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredRequests = safeRequests.filter(request => 
+    (request.serviceType || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (request.pickupLocation || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (request.status || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Action handlers with toast notifications  
   const handleDeleteUser = (userId: string, userName: string) => {
@@ -120,7 +121,7 @@ export const AdminDashboard = () => {
     const config = statusConfig[status as keyof typeof statusConfig];
     return (
       <Badge variant={config?.variant || 'secondary'}>
-        {status.replace('_', ' ').toUpperCase()}
+        {(status || 'unknown').replace('_', ' ').toUpperCase()}
       </Badge>
     );
   };
@@ -301,16 +302,16 @@ export const AdminDashboard = () => {
                                  request.vehicleType === 'ambulance' ? '🚑' : 
                                  request.vehicleType === 'mini-truck' ? '🚚' : '🚐'}
                               </span>
-                              <div>
-                                <p className="font-medium text-sm capitalize">{request.serviceType}</p>
-                                <p className="text-xs text-muted-foreground capitalize">
-                                  {request.vehicleType.replace('-', ' ')}
-                                </p>
-                              </div>
+                               <div>
+                                 <p className="font-medium text-sm capitalize">{request.serviceType || 'Unknown Service'}</p>
+                                 <p className="text-xs text-muted-foreground capitalize">
+                                   {(request.vehicleType || 'unknown').replace('-', ' ')}
+                                 </p>
+                               </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                              {request.pickupLocation.substring(0, 40)}...
-                            </p>
+                             <p className="text-xs text-muted-foreground">
+                               {(request.pickupLocation || 'Unknown location').substring(0, 40)}...
+                             </p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(request.requestedAt).toLocaleString()}
                             </p>
@@ -433,15 +434,15 @@ export const AdminDashboard = () => {
                   ) : (
                     filteredUsers.map((user) => (
                       <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{user.name}</h4>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <p className="text-sm text-muted-foreground">{user.phone}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                            {user.status}
-                          </Badge>
+                         <div>
+                           <h4 className="font-medium">{user.name || 'Unknown User'}</h4>
+                           <p className="text-sm text-muted-foreground">{user.email || 'No email'}</p>
+                           <p className="text-sm text-muted-foreground">{user.phone || 'No phone'}</p>
+                         </div>
+                         <div className="flex items-center space-x-2">
+                           <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                             {user.status || 'inactive'}
+                           </Badge>
                           <Button 
                             variant="destructive" 
                             size="sm"
@@ -481,16 +482,16 @@ export const AdminDashboard = () => {
                   ) : (
                     filteredDrivers.map((driver) => (
                       <div key={driver.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{driver.name}</h4>
-                          <p className="text-sm text-muted-foreground">{driver.email}</p>
-                          <p className="text-sm text-muted-foreground">{driver.phone}</p>
-                          <p className="text-sm text-muted-foreground capitalize">Vehicle: {driver.vehicleType}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={driver.status === 'approved' ? 'default' : 'secondary'}>
-                            {driver.status}
-                          </Badge>
+                         <div>
+                           <h4 className="font-medium">{driver.name || 'Unknown Driver'}</h4>
+                           <p className="text-sm text-muted-foreground">{driver.email || 'No email'}</p>
+                           <p className="text-sm text-muted-foreground">{driver.phone || 'No phone'}</p>
+                           <p className="text-sm text-muted-foreground capitalize">Vehicle: {driver.vehicleType || 'Unknown'}</p>
+                         </div>
+                         <div className="flex items-center space-x-2">
+                           <Badge variant={driver.status === 'approved' ? 'default' : 'secondary'}>
+                             {driver.status || 'pending'}
+                           </Badge>
                           {driver.status === 'pending' && (
                             <Button 
                               variant="default" 
@@ -550,18 +551,18 @@ export const AdminDashboard = () => {
                                request.vehicleType === 'ambulance' ? '🚑' : 
                                request.vehicleType === 'mini-truck' ? '🚚' : '🚐'}
                             </span>
-                            <div>
-                              <p className="font-medium capitalize">{request.serviceType}</p>
-                              <p className="text-sm text-muted-foreground capitalize">
-                                {request.vehicleType.replace('-', ' ')} • {request.pickupLocation}
-                              </p>
-                            </div>
+                             <div>
+                               <p className="font-medium capitalize">{request.serviceType || 'Unknown Service'}</p>
+                               <p className="text-sm text-muted-foreground capitalize">
+                                 {(request.vehicleType || 'unknown').replace('-', ' ')} • {request.pickupLocation || 'Unknown location'}
+                               </p>
+                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
-                            {request.status.replace('_', ' ').toUpperCase()}
-                          </Badge>
+                         <div className="flex items-center space-x-2">
+                           <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
+                             {(request.status || 'pending').replace('_', ' ').toUpperCase()}
+                           </Badge>
                           <Button 
                             variant="destructive" 
                             size="sm"
@@ -594,10 +595,10 @@ export const AdminDashboard = () => {
                   <div className="space-y-4">
                     <h4 className="font-medium">Request Statistics</h4>
                     <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>Total Requests:</span>
-                        <span className="font-medium">{requests?.length || 0}</span>
-                      </div>
+                       <div className="flex justify-between">
+                         <span>Total Requests:</span>
+                         <span className="font-medium">{safeRequests.length}</span>
+                       </div>
                       <div className="flex justify-between">
                         <span>Completed:</span>
                         <span className="font-medium text-green-600">{completedCount}</span>

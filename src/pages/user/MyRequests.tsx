@@ -33,9 +33,12 @@ const getVehicleIcon = (vehicleType: string) => {
 export const MyRequests = () => {
   const { auth } = useAuth();
   const { requests, cancelRequest } = useService();
+  
+  // Safe array handling
+  const safeRequests = requests || [];
   const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled'>('all');
 
-  const userRequests = requests.filter(request => request.userId === auth.user?.id);
+  const userRequests = safeRequests.filter(request => request.userId === auth.user?.id);
   const filteredRequests = filter === 'all' 
     ? userRequests 
     : userRequests.filter(req => req.status === filter);
@@ -67,7 +70,7 @@ export const MyRequests = () => {
               size="sm"
               onClick={() => setFilter(status)}
             >
-              {status === 'all' ? 'All Requests' : status.replace('_', ' ').toUpperCase()}
+              {status === 'all' ? 'All Requests' : (status || '').replace('_', ' ').toUpperCase()}
             </Button>
           ))}
         </div>
@@ -102,14 +105,14 @@ export const MyRequests = () => {
                   <div className="space-y-2">
                     <CardTitle className="flex items-center space-x-2 text-xl font-bold">
                       <span className="text-2xl">{getVehicleIcon(request.vehicleType)}</span>
-                      <span className="capitalize">{request.serviceType}</span>
+                      <span className="capitalize">{request.serviceType || 'Unknown Service'}</span>
                       <span className="text-sm font-normal text-muted-foreground">
-                        • {request.vehicleType.replace('-', ' ')}
+                        • {(request.vehicleType || 'unknown').replace('-', ' ')}
                       </span>
                     </CardTitle>
                     <div className="flex items-center space-x-4">
-                      <Badge className={`rounded-full px-3 py-1 border ${getStatusColor(request.status)}`}>
-                        {request.status.replace('_', ' ').toUpperCase()}
+                      <Badge className={`rounded-full px-3 py-1 border ${getStatusColor(request.status || 'pending')}`}>
+                        {(request.status || 'pending').replace('_', ' ').toUpperCase()}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
                         {format(new Date(request.requestedAt), 'MMM d, yyyy • h:mm a')}
@@ -118,7 +121,7 @@ export const MyRequests = () => {
                   </div>
                       </div>
                       <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
-                        {request.status.replace('_', ' ').toUpperCase()}
+                        {(request.status || 'pending').replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                   </CardHeader>

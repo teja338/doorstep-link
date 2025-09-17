@@ -29,8 +29,11 @@ const getServiceTypeColor = (serviceType: string) => {
 export const DriverDashboard = () => {
   const { auth } = useAuth();
   const { requests, acceptRequest, rejectRequest } = useService();
+  
+  // Safe array handling
+  const safeRequests = requests || [];
 
-  const pendingRequests = requests.filter(request => request.status === 'pending');
+  const pendingRequests = safeRequests.filter(request => request.status === 'pending');
 
   const handleAccept = (requestId: string) => {
     if (auth.user) {
@@ -146,7 +149,7 @@ export const DriverDashboard = () => {
                           <div>
                     <CardTitle className="flex items-center space-x-2 text-xl font-bold">
                       <span className="text-2xl">{getVehicleIcon(request.vehicleType)}</span>
-                      <span className="capitalize">{request.serviceType}</span>
+                      <span className="capitalize">{request.serviceType || 'Unknown Service'}</span>
                       <Badge className={`rounded-full px-3 py-1 border text-xs ${getServiceTypeColor(request.serviceType)}`}>
                         {request.serviceType === 'ambulance' || request.serviceType === 'medicine' ? 'URGENT' : 'STANDARD'}
                       </Badge>
@@ -154,7 +157,7 @@ export const DriverDashboard = () => {
                     <div className="flex items-center space-x-2">
                       <Truck className="h-4 w-4 text-accent-blue" />
                       <span className="text-sm font-medium text-accent-blue capitalize">
-                        {request.vehicleType.replace('-', ' ')} Required
+                        {(request.vehicleType || 'unknown').replace('-', ' ')} Required
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
